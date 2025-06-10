@@ -1,0 +1,531 @@
+---
+title: "DISCRETE DISTRIBUTIONS"
+author: "Rigam bhaduri"
+date: "2025-06-07"
+output: html_document
+---
+
+```{r distribution}
+
+# DISCRETE DISTRIBUTIONS
+
+set.seed(123)
+n <- 10000
+U <- runif(n,min = 0,max = 1)
+p <- 0.3
+k <- 10
+par(mfrow=c(2,3))
+hist(U, probability = T, col = "red")
+
+```
+
+Let $U \sim \text{Uniform}(0,1)$. We can generate $X \sim \text{Bernoulli}(p)$ as:
+\[
+X = \begin{cases} 
+1 & \text{if } U \leq p \\
+0 & \text{if } U > p 
+\end{cases}
+\]
+This satisfies:
+\[
+P(X = 1) = P(U \leq p) = p
+\]
+\[
+P(X = 0) = P(U > p) = 1 - p
+\]
+```{r bernouli}
+
+# 1. Bernoulli(p)
+
+X <- ifelse(U <= p, 1, 0)  # Transform to Bernoulli
+barplot(table(X)/n, main="Bernoulli", col="skyblue", ylim=c(0,1))
+#-----Visulize the Bernouli distribution-------
+cat("Bernoulli mean (should be close to p =", p, "):", mean(X), "\n")
+
+```
+$\textbf{From Bernoulli to Binomial: Mathematical Derivation}$
+
+$\textbf{Bernoulli Distribution:}$
+
+A random variable $X$ follows $\text{Bernoulli}(p)$ if:
+\[
+P(X=1) = p \quad \text{and} \quad P(X=0) = 1-p
+\]
+
+$\textbf{Binomial Distribution}$:
+A random variable $Y$ follows $\text{Binomial}(n,p)$ if:
+\[
+P(Y=k) = \binom{n}{k} p^k (1-p)^{n-k}, \quad k=0,1,\dots,n
+\]
+$\textbf{Conversion Process}$
+
+The Binomial distribution arises as the sum of $n$ independent Bernoulli trials:
+
+\[
+Y = \sum_{i=1}^n X_i \quad \text{where} \quad X_i \overset{\text{i.i.d.}}{\sim} \text{Bernoulli}(p)
+\]
+
+$\textbf{Expectation}$:
+\[
+E[Y] = E\left[\sum_{i=1}^n X_i\right] = \sum_{i=1}^n E[X_i] = n p
+\]
+
+$\textbf{Variance}$ (using independence):
+\[
+\text{Var}(Y) = \text{Var}\left(\sum_{i=1}^n X_i\right) = \sum_{i=1}^n \text{Var}(X_i) = n p (1-p)
+\]
+
+$\textbf{Probability Mass Function}$:
+ Each specific sequence with $k$ successes has probability $p^k (1-p)^{n-k}$
+ There are $\binom{n}{k}$ such sequences
+ Thus: $P(Y=k) = \binom{n}{k} p^k (1-p)^{n-k}$
+
+$\textbf{Generation Algorithm}$
+
+Given $U_1, \dots, U_n \sim \text{Uniform}(0,1)$:
+
+Generate Bernoulli variates:
+\[
+X_i = \mathbb{I}(U_i \leq p) = 
+\begin{cases} 
+1 & \text{if } U_i \leq p \\
+0 & \text{otherwise}
+\end{cases}
+\]
+
+ Sum to get Binomial variate:
+\[
+Y = \sum_{i=1}^n X_i
+\]
+
+
+```{r binomial}
+
+# 2 Binomial(n,p)
+
+U_binomial <- matrix(runif(n * k), nrow = n, ncol = k)
+Y <- rowSums(U_binomial <= p)  # Sum Bernoulli trials per row
+
+# Check mean (should approach k*p)
+cat("Binomial mean (should be close to k*p =", k*p, "):", mean(Y), "\n")
+
+# --- Visualize the Binomial samples ---
+hist(Y, 
+     breaks = seq(-0.5, k + 0.5, by = 1), 
+     main = "10,000 Samples from Binomial(k=10, p=0.3)",
+     xlab = "Number of Successes",
+     col = "skyblue",
+     freq = FALSE)
+lines(density(Y, adjust = 1.5), col = "red", lwd = 2)  # Optional: Add smoothed density
+```
+$\textbf{Relationship Between Binomial and Geometric Distributions}$
+
+Let $X_1, X_2, \ldots$ be independent $\text{Bernoulli}(p)$ trials (which are $\text{Binomial}(1,p)$ random variables). Then:
+
+$\textbf{Fundamental Definitions}$
+
+The $\textbf{Binomial(n,p)}$ distribution counts the number of successes in $n$ trials:
+    \[
+    Y_n = \sum_{i=1}^n X_i \sim \text{Binomial}(n,p)
+    \]
+    
+ The $\textbf{Geometric(p)}$ distribution counts the trials until the first success:
+    \[
+    G = \min\{k \in \mathbb{N} \mid X_k = 1\} \sim \text{Geometric}(p)
+    \]
+
+$\textbf{Probability Mass Functions}$
+
+\[
+\begin{eqnarray}
+\text{Binomial}(n,p): & \quad P(Y_n = k) = \binom{n}{k}p^k(1-p)^{n-k}, \quad k = 0,1,\ldots,n \\
+\text{Geometric}(p): & \quad P(G = k) = (1-p)^{k-1}p, \quad k = 1,2,\ldots
+\end{eqnarray}
+\]
+
+$\textbf{Conversion Relationship}$
+
+To generate $G \sim \text{Geometric}(p)$ from $\text{Binomial}(1,p)$ trials:
+\[
+G \overset{d}{=} \inf\left\{ k \geq 1 : \sum_{i=1}^k X_i \geq 1 \right\}
+\]
+where $\overset{d}{=}$ denotes equality in distribution.
+
+$\textbf{Moments}$
+
+
+\begin{eqnarray}
+E[G] &= \frac{1}{p} \\
+\text{Var}(G) &= \frac{1-p}{p^2}
+\end{eqnarray}
+
+
+$\textbf{Interpretation}$
+
+This shows that while:
+    1. The Binomial distribution counts successes in a fixed number of trials
+    2. The Geometric distribution counts trials until the first success
+
+making the Geometric distribution a special case of the Negative Binomial distribution with $r=1$ success required.
+
+```{r geometric}
+
+# 3. Geometric(p)
+
+# Function to generate Geometric(p) from Binomial(1,p) trials
+generate_geometric <- function(n,p) {
+  geometric_samples <- numeric(n)
+  
+  for (i in 1:n) {
+    count <- 0
+    success <- FALSE
+    
+    while (!success) {
+      count <- count + 1
+      # Generate a single Bernoulli trial (Binomial with n=1)
+      trial <- rbinom(1, 1, p)
+      if (trial == 1) {
+        success <- TRUE
+      }
+    }
+    
+    geometric_samples[i] <- count
+  }
+  
+  return(geometric_samples)
+}
+
+# Generate Geometric samples
+geom_samples <- generate_geometric(n, p)
+
+# Check statistics (mean should approach 1/p)
+cat("Geometric mean (should be close to 1/p =", 1/p, "):", mean(geom_samples), "\n")
+cat("Geometric variance (should be close to (1-p)/p^2 =", (1-p)/p^2, "):", var(geom_samples), "\n")
+
+# --- Visualize the Geometric samples ---
+hist(geom_samples, 
+     breaks = seq(0.5, max(geom_samples)+0.5, by = 1),
+     main = paste("10,000 Samples from Geometric(p =", p, ")"),
+     xlab = "Number of Trials Until First Success",
+     col = "lightgreen",
+     freq = FALSE)
+
+# Add theoretical PMF
+x_vals <- 1:max(geom_samples)
+points(x_vals, dgeom(x_vals-1, p), col = "red", pch = 19)  # Note: dgeom uses k-1
+legend("topright", legend = "Theoretical PMF", col = "red", pch = 19)
+```
+
+$\textbf{Geometric Distribution}$
+Let $G \sim \text{Geometric}(p)$ with probability mass function:
+\[
+P(G = k) = (1-p)^{k-1}p \quad \text{for } k = 1, 2, 3, \ldots
+\]
+where $p$ is the success probability per trial.
+
+$\textbf{Poisson Distribution}$
+Let $P \sim \text{Poisson}(\lambda)$ with probability mass function:
+\[
+P(P = k) = \frac{e^{-\lambda}\lambda^k}{k!} \quad \text{for } k = 0, 1, 2, \ldots
+\]
+
+$\textbf{Conversion Methodology}$
+
+$\textbf{Approach via Sum of Geometric Variables}$
+The sum of $n$ independent Geometric($p$) random variables follows a Negative Binomial distribution:
+
+\[
+S_n = \sum_{i=1}^n G_i \sim \text{NegativeBinomial}(n, p)
+\]
+
+Under the following conditions as $n \to \infty$ and $p \to 0$ while maintaining $n(1-p)/p \to \lambda$:
+
+\[
+S_n \overset{d}{\approx} \text{Poisson}(\lambda)
+\]
+
+$\textbf{Conversion Steps}$
+
+1. Determine the required number of Geometric variables to sum:
+\[
+n = \left\lceil \frac{\lambda p}{1-p} \right\rceil
+\]
+
+2. Generate $n \times m$ Geometric samples ($m$ is the desired number of Poisson samples)
+
+3. Sum the Geometric samples in groups of $n$:
+\[
+P_j = \sum_{i=(j-1)n+1}^{jn} G_i \quad \text{for }j = 1, \ldots, m
+\]
+
+4. The resulting $\{P_j\}_{j=1}^m$ approximates $\text{Poisson}(\lambda)$
+
+
+$\textbf{Approximation Quality}$
+
+The approximation improves when:
+\[
+p < 0.1 \quad \text{and} \quad \lambda < 5
+\]
+
+The error can be quantified using the total variation distance:
+\[
+d_{TV}(\text{NegativeBinomial}(n,p), \text{Poisson}(\lambda)) \leq \frac{p}{1-p}
+\]
+
+$\textbf{Limitations}$
+
+1. The approximation deteriorates for large $\lambda$ values
+2. Direct Poisson generation via \texttt{rpois()} is preferred for exact samples
+3. Mainly useful for pedagogical demonstrations of distributional relationships
+
+```{r Poisson}
+
+# 4. Poisson(lambda=4)
+
+lambda <- 4  # Target Poisson parameter
+# 2. Convert to Poisson - Method 1: Sum of Geometrics
+convert_to_poisson <- function(geom_samples, target_lambda, p) {
+  # Calculate how many Geometrics to sum
+  k <- max(1, round(target_lambda * p / (1 - p)))
+  
+  # Make sure we have enough samples
+  n <- length(geom_samples)
+  m <- floor(n/k)
+  
+  # Reshape and sum
+  matrix(geom_samples[1:(m*k)], ncol = k) |> rowSums()
+}
+
+pois_samples <- convert_to_poisson(geom_samples, lambda, p)
+
+# 3. Check results
+if (all(is.finite(pois_samples))) {
+  cat("Poisson mean:", mean(pois_samples), " (target:", lambda, ")\n")
+  cat("Poisson variance:", var(pois_samples), "\n")
+  
+  # Visualization
+  hist(pois_samples, 
+       breaks = seq(-0.5, max(pois_samples)+0.5, by = 1),
+       main = paste("Poisson Approximation via", round(lambda*p/(1-p)), "Geometric Sums"),
+       xlab = "Counts",
+       col = "lightblue",
+       freq = FALSE)
+  points(0:max(pois_samples), dpois(0:max(pois_samples), lambda), 
+         col = "red", pch = 19)
+  legend("topright", legend = "Theoretical PMF", col = "red", pch = 19)
+} else {
+  warning("Non-finite values detected in Poisson samples")
+}
+```
+
+$\textbf{Conversion from Poisson to Negative Binomial}$
+
+$\textbf{Theoretical Foundation}$
+
+The Negative Binomial distribution arises as a \textbf{Poisson-Gamma mixture}:
+
+X \sim \text{NegativeBinomial}(r, p) \quad \text{iff} \quad 
+X|\lambda \sim \text{Poisson}(\lambda) \quad \text{with} \quad 
+\lambda \sim \text{Gamma}(r, \beta)
+
+where the mixing yields the parameter relationship:
+p = \frac{\beta}{1+\beta} \quad \text{or equivalently} \quad 
+\beta = \frac{p}{1-p}
+
+$\textbf{Parameter Conversion}$
+
+Given a target Poisson($\lambda$) distribution, we convert to Negative Binomial($r,p$) via:
+
+1. Select the dispersion parameter $r$ (shape of Gamma distribution)
+
+2. Compute the success probability:
+\begin{equation}
+p = \frac{r}{r + \lambda}
+\end{equation}
+
+3. The resulting Negative Binomial has moments:
+\mathbb{E}[X] &= \frac{r(1-p)}{p} = \lambda \\
+\text{Var}(X) &= \frac{r(1-p)}{p^2} = \lambda + \frac{\lambda^2}{r}
+
+
+\subsection{Derivation}
+
+The mixture emerges from the integral:
+\begin{equation}
+P(X=k) = \int_0^\infty \frac{e^{-\lambda}\lambda^k}{k!} \cdot \frac{\beta^r}{\Gamma(r)} \lambda^{r-1} e^{-\beta\lambda} \, d\lambda
+\end{equation}
+
+Solving yields the Negative Binomial PMF:
+\begin{equation}
+P(X=k) = \frac{\Gamma(r+k)}{k!\,\Gamma(r)} \left(\frac{\beta}{1+\beta}\right)^r \left(\frac{1}{1+\beta}\right)^k
+\end{equation}
+
+$\textbf{Limiting Behavior}$
+
+When $r \to \infty$ while maintaining $\lambda = \frac{r(1-p)}{p}$ constant:
+\begin{equation}
+\text{NegativeBinomial}(r,p) \xrightarrow{d} \text{Poisson}(\lambda)
+\end{equation}
+
+```{r negative_binomial}
+
+# 5. Negative Binomial (size=5, prob=0.3)
+
+lambda <- 4
+target_r <- 5
+target_p <- target_r/(target_r + lambda)
+
+convert_to_negbin <- function(pois_samples, r, lambda) {
+  p <- r/(r + lambda)
+  rnbinom(length(pois_samples), size = r, prob = p)
+}
+negbin_samples <- convert_to_negbin(pois_samples, target_r, lambda)
+                                    
+# Visualization
+par(mfrow = c(1, 2))
+hist(negbin_samples, 
+     breaks = seq(-0.5, max(negbin_samples)+0.5, by = 1),
+     main = "Negative Binomial Distribution",
+     xlab = "Counts",
+     col = "lightgreen",
+     freq = FALSE)
+points(0:max(negbin_samples), dnbinom(0:max(negbin_samples), size = target_r, prob = target_p), 
+       col = "blue", pch = 19)
+```
+$\textbf{Conversion from Uniform to Multinomial Distribution}$
+
+$\textbf{Mathematical Framework}$
+
+Given a multinomial distribution with $k$ categories and probability vector $\mathbf{p} = (p_1, p_2, \dots, p_k)$ where $\sum_{i=1}^k p_i = 1$, we can generate samples using uniform random variables $U \sim \text{Uniform}(0,1)$.
+
+$\textbf{Conversion Algorithm}$
+
+1. Generate independent uniform random variables:
+\begin{equation}
+U_1, U_2, \dots, U_n \overset{\text{iid}}{\sim} \text{Uniform}(0,1)
+\end{equation}
+
+2. Construct cumulative probabilities:
+\begin{equation}
+c_0 = 0, \quad c_i = \sum_{j=1}^i p_j \quad \text{for } i = 1, \dots, k
+\end{equation}
+
+3. For each $U_m$, determine the category:
+\begin{equation}
+X_m = \sum_{i=1}^k i \cdot \mathbb{I}_{[c_{i-1}, c_i)}(U_m)
+\end{equation}
+where $\mathbb{I}$ is the indicator function.
+
+4. The resulting counts follow:
+\begin{equation}
+\mathbf{N} = (N_1, \dots, N_k) \sim \text{Multinomial}(n, \mathbf{p})
+\end{equation}
+where $N_i = \sum_{m=1}^n \mathbb{I}\{X_m = i\}$.
+
+
+$\textbf{Mathematical Justification}$
+
+The transformation works because:
+\begin{equation}
+P(X_m = i) = P(U_m \in [c_{i-1}, c_i)) = c_i - c_{i-1} = p_i
+\end{equation}
+
+For $n$ trials, the joint distribution becomes:
+\begin{equation}
+P(\mathbf{N} = \mathbf{n}) = \frac{n!}{n_1! \cdots n_k!} \prod_{i=1}^k p_i^{n_i}
+\end{equation}
+
+```{r multinomial}
+
+# 6. Multinomial (1 trial, probs = c(0.2, 0.5, 0.3))
+
+p <- c(0.2, 0.5, 0.3)  # Probability vector (must sum to 1)
+
+# Generate multinomial samples from uniform
+cum_p <- cumsum(p)
+multinomial_samples <- sapply(U, function(u) {
+  which.max(u <= cum_p)
+})
+
+# Convert to counts
+counts <- table(factor(multinomial_samples, levels = 1:k))
+barplot(table(multinomial_samples)/n, main="Multinomial", col="lightblue")
+```
+$\textbf{Conversion from Multinomial to Discrete Uniform Distribution}$
+
+$\textbf{Problem Definition}$
+
+Given a multinomial random variable $X \sim \text{Multinomial}(1, \mathbf{p})$ with probability vector $\mathbf{p} = (p_1, p_2, \dots, p_k)$ where $\sum_{i=1}^k p_i = 1$, we want to transform it to a discrete uniform random variable $Y \sim \text{Uniform}\{1, 2, \dots, k\}$ with $P(Y=i) = \frac{1}{k}$ for all $i$.
+
+$\textbf{Transformation Method}$
+
+1. Generate $U \sim \text{Uniform}(0,1)$
+2. For multinomial distribution:
+\begin{equation}
+X = \min\left\{j \in \{1,\dots,k\} : \sum_{i=1}^j p_i \geq U\right\}
+\end{equation}
+
+3. For discrete uniform distribution:
+\begin{equation}
+Y = \lceil kU \rceil
+\end{equation}
+where $\lceil \cdot \rceil$ is the ceiling function.
+
+$\textbf{Mathematical Justification}$
+
+The transformation works because:
+
+\begin{equation}
+P(Y = i) = P\left(\frac{i-1}{k} < U \leq \frac{i}{k}\right) = \frac{i}{k} - \frac{i-1}{k} = \frac{1}{k}
+\end{equation}
+
+This creates equal-width bins in $[0,1]$:
+
+\[
+[0,1] = \bigcup_{i=1}^k \left(\frac{i-1}{k}, \frac{i}{k}\right]
+\]
+
+$\textbf{Properties}$
+
+1. \textbf{Invertibility}: The transformation is non-invertible (loses original multinomial information)
+2. \textbf{Uniformity}: 
+\begin{equation}
+\lim_{n\to\infty} \frac{N_i}{n} = \frac{1}{k} \quad \text{almost surely}
+\end{equation}
+where $N_i$ counts occurrences of category $i$
+
+3. \textbf{Variance}:
+\begin{equation}
+\text{Var}(Y) = \frac{k^2 - 1}{12}
+\end{equation}
+
+
+$\textbf{Alternative Approach}$
+
+If preserving some multinomial structure is desired, we can use:
+
+\begin{equation}
+Y = F^{-1}(F_X(X) \cdot U')
+\end{equation}
+
+where:
+1. $F_X$ is the CDF of the multinomial
+2. $U' \sim \text{Uniform}(0,1)$
+3. $F^{-1}$ is the inverse CDF of the uniform
+
+```{r discrete_custom}
+
+# 7. Discrete custom (say values = 1, 3, 5 with probs = 0.2, 0.5, 0.3)
+
+# Convert to uniform by redistributing probabilities
+# Method: Inverse transform with equal-width bins
+uniform_samples <- sapply(U, function(u) {
+  ceiling(u * k)  # Equal bins of width 1/k
+})
+barplot(table(uniform_samples)/n, 
+        main = "Discrete Uniform",
+        col = "lightgreen",
+        ylim = c(0, 0.6))
+```
+
